@@ -96,34 +96,36 @@ class ImageProcessor:
 
         # Try each method separately and collect any errors
         try:
+            st = time.perf_counter()
             self.log_entry.add_user_data(log_message)
+            et = time.perf_counter()
+            print(f"add user data time: {et-st:.4f} secs")
         except Exception as e:
             logging.error("Failed to add user data", exc_info=False)
             errors.append(f"add_user_data: {e}")
 
         try:
+            stt = time.perf_counter()
             self.log_entry.add_model_data(log_message)
-
+            ett = time.perf_counter()
+            print(f"Add model data time is: {ett-stt:.4f} sec")
         except Exception as e:
             logging.error("ImageProcessor: Failed to add model data", exc_info=False)
             errors.append(f"add_model_data: {e}")
 
         try:
+            sttt = time.perf_counter()
             if errors: 
                 db_status = False
             else:
                 db_status = True
             self.log_entry.add_to_csv(log_message, db_status)
+            ettt = time.perf_counter()
+
+            print(f"Add to csv time is: {ettt-sttt:.4f} sec")
         except Exception as e:
             logging.error("ImageProcessor: Failed to add csv", exc_info=False)
             errors.append(f"add_to_csv: {e}")
-
-        # Handle frontend string generation
-        try:
-            log_entry_string = self.log_entry.get_frontend_string(log_message)
-        except Exception as e:
-            errors.append(f"get_frontend_string: {e}")
-            log_entry_string = "N/A"
 
         # Set final status
         if errors:

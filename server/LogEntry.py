@@ -6,6 +6,8 @@ import requests
 from parameters import Parameters
 from ipwhois import IPWhois
 import logging
+import os
+
 
 load_dotenv()
 
@@ -55,23 +57,6 @@ class LogEntry:
                 writer.writerow(log_entry_csv)
         except:
             raise FileNotFoundError
-
-
-    def get_frontend_string(self, log_message):
-        log_entry_frontend = {
-            'service_name': log_message.service_name,
-            'ip_address': log_message.ip_address,
-            'location': self.parameters.get_location_from_ip(log_message.ip_address),
-            'grpc_response_time': str(round(log_message.grpc_response_time,2)) + " ms",  # Convert to string
-            'grpc_system_latency': str(round(log_message.grpc_response_time - log_message.process_time, 2)) + " ms",  # Convert to string
-            'total_response_time': str(round(log_message.total_response_time,2)) + " ms",  # Convert to string
-            'total_latency': str(round(log_message.total_response_time - log_message.process_time, 2)) + " ms",  # Convert to string
-            'throughput': str(round(log_message.throughput,2)) + " Mbps"  # Convert to string
-        }
-        log_entry_string = json.dumps(log_entry_frontend, indent=4)
-
-        return log_entry_string
-    
 
 
     def add_user_data(self, log_message):
@@ -160,25 +145,28 @@ class LogEntry:
                     'server_id': self.server_id,
                     'service_type': self.task_name,
                     'latency_time': round(log_messages.total_response_time - log_messages.process_time, 4),
-                    'cpu_usage': round(log_messages.cpu_utilized, 2),
-                    'memory_usage': round(log_messages.memory_utilized, 2),
-                    'throughput': round(log_messages.throughput,2),
+                    'cpu_usage': round(log_messages.cpu_utilized, 4),
+                    'memory_usage': round(log_messages.memory_utilized, 4),
+                    'throughput': round(log_messages.throughput,4),
                     'energy_required': round(log_messages.power*log_messages.process_time,4),
-                    'power_watts': round(log_messages.power, 2),
-                    'response_time': round(log_messages.total_response_time,2)
+                    'power_watts': round(log_messages.power, 4),
+                    'response_time': round(log_messages.total_response_time,4)
                 }
-
+            
+            session = requests.Session()
             # Send POST request to add model result
-        
-            response = requests.post(f'{DB_URL}/modelresult', json=model_result)
+            response = session.post(f'{DB_URL}/modelresult', json=model_result, proxies={})
+
             logging.info(f"LogEntry: Model Data API Response Status: {response.status_code}")
+        
             resjson = response.json()
+
             if response.status_code != 201:
                 logging.error("LogEntry: Server Error: 500", exc_info=False)
                 raise requests.exceptions.HTTPError(resjson.get("message"))
             else:
                 logging.info("LogEntry: Model Data Added")
-        
+
         except Exception as e:
             raise RuntimeError(f"LogEntry: error in add_model_data: {e}")
 

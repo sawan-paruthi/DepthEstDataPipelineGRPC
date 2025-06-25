@@ -30,7 +30,7 @@ class ObjectProcessor:
                 return detections
             
             except Exception as e:
-                logging.error("ObjectProcessor: Error while executing MiDaS: {e}")
+                logging.error(f"ObjectProcessor: Error while executing MiDaS: {e}")
                 raise Exception(f"Error while executing MiDaS:")
 
         else:
