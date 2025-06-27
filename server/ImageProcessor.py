@@ -1,14 +1,12 @@
 import os
 import requests
 import time
-import json
-import csv
 import logging
 from ObjectProcessor import ObjectProcessor
 from LogEntry import LogEntry
 from parameters import Parameters
-import subprocess
 import psutil
+import gc
 
 
 class ImageProcessor:
@@ -80,9 +78,11 @@ class ImageProcessor:
             "throughput": throughput,
             "power": avg_power,
             "cpu_utilized": cpu_used_percent,
-            "memory_utilized": memory_used_mb,
-            "detections": detections
+            "memory_utilized": memory_used_mb
         }
+
+        del detections
+        gc.collect()
 
         return metrics
 
